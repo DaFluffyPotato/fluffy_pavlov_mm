@@ -22,7 +22,7 @@ async def on_ready():
             bot_data.load(guild)
             bot_data.queues.debug_mode = True
 
-    print(f'{client.user} has connected to Discord!')
+    print('Connected to Discord!')
 
     regular_tasks.start()
 
