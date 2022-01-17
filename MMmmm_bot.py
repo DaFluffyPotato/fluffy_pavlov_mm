@@ -43,5 +43,7 @@ async def regular_tasks():
     for match in bot_data.active_matches:
         if match.waiting_to_gen:
             await match.full_init()
+        else:
+            await match.tick()
 
 client.run(token)

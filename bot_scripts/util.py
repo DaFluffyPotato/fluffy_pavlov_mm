@@ -1,3 +1,5 @@
+emoji_numbers = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣']
+
 def read_f(path):
     f = open(path, 'r')
     dat = f.read()
@@ -16,3 +18,9 @@ def grammatical_list(strings):
                 output += ' '
         output += string
     return output
+
+def emoji_list(strings):
+    output = ''
+    for i, string in enumerate(strings):
+        output += emoji_numbers[i + 1] + ' - ' + string + '\n'
+    return output[:-1]

@@ -1,3 +1,5 @@
+import random
+
 import discord
 
 from .queue import Queues
@@ -9,6 +11,11 @@ class BotData:
         self.matches_category = None
         self.next_match_id = 0
         self.active_matches = []
+
+    def get_maps(self, queue_id, count=6):
+        map_set = config['queues'][queue_id]['maps']
+        random.shuffle(map_set)
+        return map_set[:count]
 
     def load(self, guild):
         self.guild = guild

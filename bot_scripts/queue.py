@@ -62,7 +62,7 @@ class Queue:
             for team in teams:
                 for user in team:
                     self.users.remove(user)
-            self.bot_data.active_matches.append(Match(self.bot_data, teams, mmr_diff=mmr_diff))
+            self.bot_data.active_matches.append(Match(self.bot_data, self.id, teams, mmr_diff=mmr_diff))
 
         # unlock queue
         self.creating_match = False
