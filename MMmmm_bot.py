@@ -32,6 +32,9 @@ async def on_message(message):
         if base_cmd in commands:
             await commands[base_cmd](message, message.content.split(' '))
 
+        for match in bot_data.active_matches:
+            await match.process_message(message)
+
 @client.event
 async def on_reaction_add(reaction, user):
     if reaction.message.channel.category == bot_data.matches_category:
@@ -40,10 +43,12 @@ async def on_reaction_add(reaction, user):
 
 @tasks.loop(seconds=1)
 async def regular_tasks():
-    for match in bot_data.active_matches:
+    for match in bot_data.active_matches[::-1]:
         if match.waiting_to_gen:
             await match.full_init()
-        else:
+        elif not match.completed:
             await match.tick()
+        else:
+            bot_data.active_matches.remove(match)
 
 client.run(token)

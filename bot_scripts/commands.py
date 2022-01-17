@@ -56,4 +56,5 @@ async def clear_matches(message, args):
         for role in roles:
             if role.name.split('-')[0] == 'match':
                 await role.delete()
+        bot_data.active_matches = []
         await message.channel.send('cleared matches!')

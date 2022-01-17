@@ -1,5 +1,7 @@
 import time
 
+import discord
+
 from .config import config
 from .vote import Vote
 from .util import grammatical_list, emoji_list
@@ -14,7 +16,7 @@ class Match:
         self.mmr_diff = mmr_diff
         self.waiting_to_gen = True
         self.team_roles = []
-        self.team_sides = [None, None]
+        self.team_sides = [None for team in teams]
         self.owned_channels = []
 
         self.team_ready_counts = [0 for team in teams]
@@ -22,13 +24,31 @@ class Match:
         self.map_set = bot_data.get_maps(queue_id)
         self.selected_map = None
 
+        self.scores = [0 for team in teams]
+
         self.state = 0
         self.state_start = time.time()
         self.current_vote = None
+        self.completed = False
 
     def next_state(self):
         self.state += 1
         self.state_start = time.time()
+
+    def submit_score(self, team, score):
+        if self.scores == [None, None]:
+            self.scores[team] = score
+        elif ((score == 10) or (self.scores[abs(team - 1)] == 10)): # and (self.scores[abs(team - 1)] + score <= 20):
+            self.scores[team] = score
+            if None not in self.scores:
+                self.state = 6
+                self.state_start = time.time()
+        else:
+            return False
+        return True
+
+    def process_results(self):
+        print('process results! \o/')
 
     async def full_init(self):
         self.waiting_to_gen = False
@@ -37,11 +57,17 @@ class Match:
 
     @property
     def match_info_msg(self):
-        output = '**Match ' + str(self.match_id) + ' (' + self.queue_id + ')**\n'
-        output += 'Map: **' + str(self.selected_map) + '**\n\n'
+        output = '**Match ' + str(self.match_id) + ' (' + self.queue_id + ')'
+        if self.state == 7:
+            if self.scores[0] > self.scores[1]:
+                output += ' - Team A wins ' + str(self.scores[0]) + '-' + str(self.scores[1]) + '!'
+            else:
+                output += ' - Team B wins ' + str(self.scores[1]) + '-' + str(self.scores[0]) + '!'
+        output += '**\nMap: **' + str(self.selected_map) + '**\n\n'
         output += 'Team A (**' + str(self.team_sides[0]) + '**): ' + grammatical_list([user.name for user in self.teams[0]]) + '\n'
-        output += 'Team B (**' + str(self.team_sides[1]) + '**): ' + grammatical_list([user.name for user in self.teams[1]]) + '\n\n'
-        output += '*A player from each team needs to submit their own team\'s score after the match ends. For example, if the final score is 10-7 with Team A winning, a player from Team A should do `!submitscore 10` and a player from Team B should do `!submitscore 7`.*'
+        output += 'Team B (**' + str(self.team_sides[1]) + '**): ' + grammatical_list([user.name for user in self.teams[1]])
+        if self.state != 7:
+            output += '\n\n*A player from each team needs to submit their own team\'s score after the match ends. For example, if the final score is 10-7 with Team A winning, a player from Team A should do `!submitscore 10` and a player from Team B should do `!submitscore 7`.*'
         return output
 
     async def tick(self):
@@ -97,16 +123,30 @@ class Match:
                 else:
                     self.team_sides = ['CT', 'T']
 
+                self.owned_channels.remove(self.team_a_channels[0])
+                self.owned_channels.remove(self.team_b_channels[0])
                 await self.team_a_channels[0].delete()
                 await self.team_b_channels[0].delete()
                 new_channel = await self.bot_data.guild.create_text_channel('match-' + str(self.match_id), category=self.bot_data.matches_category)
                 for role in self.team_roles:
-                    new_channel.set_permissions(self.team_roles[0], send_messages=True, read_messages=True)
+                    await new_channel.set_permissions(self.team_roles[0], send_messages=True, read_messages=True)
                 self.team_a_channels[0] = new_channel
                 self.team_b_channels[0] = new_channel
                 self.owned_channels.append(new_channel)
 
                 await new_channel.send(self.match_info_msg)
+
+        if self.state == 6:
+            if time.time() - self.state_start > config['score_acceptance_duration']:
+                self.next_state()
+                match_results_channel = discord.utils.get(self.bot_data.guild.channels, name=config['match_results_channel'])
+                await match_results_channel.send(self.match_info_msg)
+                self.process_results()
+                for role in self.team_roles:
+                    await role.delete()
+                for channel in self.owned_channels:
+                    await channel.delete()
+                self.completed = True
 
     async def create_roles(self):
         team_a_role = await self.bot_data.guild.create_role(name='match-' + str(self.match_id) + '-a')
@@ -175,3 +215,29 @@ class Match:
 
             if self.current_vote:
                 self.current_vote.process_reaction(reaction, user)
+
+    async def process_message(self, message):
+        if message.channel in self.owned_channels:
+            if self.state == 5:
+                if message.content.split(' ')[0] in ['!ss', '!submitscore']:
+                    try:
+                        score = int(message.content.split(' ')[1])
+                        if 0 <= score <= 10:
+                            if message.author in [user.discord_user for user in self.teams[0]]:
+                                valid = self.submit_score(0, score)
+                                if valid:
+                                    await message.channel.send('Accepted a score of `' + str(score) + '` for team A.')
+                                else:
+                                    await message.channel.send('Invalid score combination.')
+                            if message.author in [user.discord_user for user in self.teams[1]]:
+                                valid = self.submit_score(1, score)
+                                if valid:
+                                    await message.channel.send('Accepted a score of `' + str(score) + '` for team B.')
+                                else:
+                                    await message.channel.send('Invalid score combination.')
+                            if self.state == 6:
+                                await message.channel.send('The scores will be accepted in 10 seconds if no changes are made.')
+                        else:
+                            await message.channel.send('Invalid score. Must be `!submit_score <score>` where `<score>` is an integer from 0 to 10.')
+                    except ValueError:
+                        await message.channel.send('Invalid score. Must be `!submit_score <score>` where `<score>` is an integer from 0 to 10.')
