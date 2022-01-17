@@ -9,7 +9,8 @@ from bot_scripts.bot_data import bot_data
 
 token = util.read_f('token.txt')
 
-client = discord.Client()
+intents = discord.Intents.all()
+client = discord.Client(intents=intents)
 
 guild_id = 'Fluffy\'s Pavlov Matchmaking'
 

@@ -55,6 +55,10 @@ async def stats(message, args):
     target_user = message.author
     if len(message.mentions):
         target_user = message.mentions[0]
+    elif len(args) >= 2:
+        for user in bot_data.guild.members:
+            if user.name == args[1]:
+                target_user = user
     if queue_id:
         target_user_obj = User(bot_data, target_user)
         target_user_stats = target_user_obj.get_stats(queue_id)
@@ -66,7 +70,7 @@ async def stats(message, args):
         message_text += 'Losses: ' + str(target_user_stats['losses']) + '\n'
         message_text += 'Winrate: ' + str(round(target_user_stats['winrate'] * 100, 1)) + '%\n'
         message_text += '\nHistory:\n'
-        message_text += ''.join([bot_data.emotes['win'][0] if (match == 1) else bot_data.emotes['loss'][0] for match in target_user_stats['history'][-10::-1]])
+        message_text += ''.join([bot_data.emotes['win'][0] if (match == 1) else bot_data.emotes['loss'][0] for match in target_user_stats['history'][-10:][::-1]])
 
         await message.channel.send(message_text)
 
@@ -81,6 +85,14 @@ async def clear_matches(message, args):
                 await role.delete()
         bot_data.active_matches = []
         await message.channel.send('cleared matches!')
+
+@reg_command
+async def nullify(message, args):
+    if message.channel.name == config['admin_commands_channel']:
+        match_id = int(args[1])
+        match = bot_data.get_match(match_id)
+        await match.clear()
+        await message.channel.send('nullified match `' + str(match_id) + '`.')
 
 commands['cm'] = commands['clear_matches']
 commands['r'] = commands['ready']

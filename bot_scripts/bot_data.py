@@ -17,6 +17,11 @@ class BotData:
         self.db = Database(read_f('dbpass.txt').replace('\n', ''))
         self.rank_roles = {}
 
+    def get_match(self, match_id):
+        for match in self.active_matches:
+            if match.match_id == match_id:
+                return match
+
     def get_maps(self, queue_id, count=6):
         map_set = config['queues'][queue_id]['maps']
         random.shuffle(map_set)

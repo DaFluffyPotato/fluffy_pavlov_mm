@@ -15,7 +15,7 @@ class Database:
             'map': match.selected_map,
             'scores': match.scores,
             'all_users': [user.id for user in match.teams[0] + match.teams[1]],
-            'teams': [[user.id for user in match.teams[0]], [user.id for user in match.teams[0]]],
+            'teams': [[user.id for user in match.teams[0]], [user.id for user in match.teams[1]]],
             'creation_date': match.creation_date,
             'end_date': match.end_date,
             'mmr_diff': match.mmr_diff,

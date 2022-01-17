@@ -179,6 +179,12 @@ class Match:
                     await channel.delete()
                 self.completed = True
 
+    async def clear(self):
+        for role in self.team_roles:
+            await role.delete()
+        for channel in self.owned_channels:
+            await channel.delete()
+
     async def create_roles(self):
         team_a_role = await self.bot_data.guild.create_role(name='match-' + str(self.match_id) + '-a')
         team_b_role = await self.bot_data.guild.create_role(name='match-' + str(self.match_id) + '-b')

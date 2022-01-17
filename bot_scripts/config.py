@@ -20,10 +20,10 @@ config = {
             'channel': '5v5-queue',
             'maps': ['Sand', 'Museum', 'Stockpile', 'Oilrig', 'Cache', 'Mirage', 'Dust 2', 'Seaside', 'Stahlbrecher', 'Reachsky', 'Overpass', 'Manor'],
         },
-        '3v3': {
+        '2v2': {
             'player_count': 2,
-            'channel': '3v3-queue',
-            'maps': ['Sand', 'Mirage', 'Museum', 'Reachsky', 'Cache', 'Stockpile'],
+            'channel': '2v2-queue',
+            'maps': ['Sand', 'Mirage', 'Museum', 'Reachsky', 'Cache', 'Stockpile', 'Business'],
         },
     }
 }
