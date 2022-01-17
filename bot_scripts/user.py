@@ -24,3 +24,13 @@ class User:
         if queue_id not in self.queue_stats:
             self.queue_stats[queue_id] = {'mmr': config['base_mmr']}
         return self.queue_stats[queue_id]['mmr']
+
+    def adjust_mmr(self, queue_id, change):
+        self.refresh()
+        if queue_id not in self.queue_stats:
+            self.queue_stats[queue_id] = {'mmr': config['base_mmr']}
+        self.queue_stats[queue_id]['mmr'] += change
+        self.save()
+
+    def get_stats(self, queue_id):
+        return self.bot_data.db.get_user_history(self, queue_id)

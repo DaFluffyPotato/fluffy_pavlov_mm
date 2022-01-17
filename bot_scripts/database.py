@@ -57,3 +57,30 @@ class Database:
         if not user:
             user = self.create_user(discord_user)
         return user
+
+    def get_user_history(self, user, queue_id):
+        user_matches = self.db['matches'].find({'all_users': user.id, 'queue_id': queue_id})
+
+        wins = 0
+        losses = 0
+        history = []
+
+        for match in user_matches:
+            if user.id in match['teams'][match['winner']]:
+                wins += 1
+                history.append(1)
+            if user.id in match['teams'][abs(match['winner'] - 1)]:
+                losses += 1
+                history.append(0)
+
+        user_rank = self.db['users'].find({'queue_stats.' + queue_id + '.mmr': {'$gte': user.get_mmr(queue_id)}}).count()
+
+        stats = {
+            'wins': wins,
+            'losses': losses,
+            'winrate': wins / (wins + losses) if (wins + losses) else 0,
+            'history': history,
+            'rank': user_rank,
+        }
+
+        return stats

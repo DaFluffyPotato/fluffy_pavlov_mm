@@ -1,3 +1,5 @@
+from .config import config
+
 emoji_numbers = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣']
 
 def read_f(path):
@@ -24,3 +26,9 @@ def emoji_list(strings):
     for i, string in enumerate(strings):
         output += emoji_numbers[i + 1] + ' - ' + string + '\n'
     return output[:-1]
+
+def calc_rank(mmr):
+    for rank in config['ranks']:
+        if mmr > rank[1]:
+            return rank[0]
+    return rank[0]

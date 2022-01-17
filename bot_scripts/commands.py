@@ -5,6 +5,7 @@ import discord
 from .user import User
 from .bot_data import bot_data
 from .config import config
+from .util import calc_rank
 
 commands = {}
 
@@ -17,8 +18,9 @@ async def ping(message, args):
 
 @reg_command
 async def stop_bot(message, args):
-    await message.channel.send('stopping!')
-    await sys.exit()
+    if message.channel.name == config['admin_commands_channel']:
+        await message.channel.send('stopping!')
+        await sys.exit()
 
 @reg_command
 async def inqueue(message, args):
@@ -48,6 +50,27 @@ async def unready(message, args):
         await message.channel.send(message.author.display_name + ' left the ' + queue.id + ' queue. ' + str(queue.player_count) + ' players in queue.')
 
 @reg_command
+async def stats(message, args):
+    queue_id = bot_data.queues.find_channel_queue(message.channel.id)
+    target_user = message.author
+    if len(message.mentions):
+        target_user = message.mentions[0]
+    if queue_id:
+        target_user_obj = User(bot_data, target_user)
+        target_user_stats = target_user_obj.get_stats(queue_id)
+
+        message_text = '**' + target_user_obj.name + '** (' + queue_id + ')\n'
+        message_text += 'Rank: #' + str(target_user_stats['rank']) + ' - ' + calc_rank(target_user_obj.get_mmr(queue_id)) + '\n'
+        message_text += 'MMR: ' + str(round(target_user_obj.get_mmr(queue_id), 1)) + '\n'
+        message_text += 'Wins: ' + str(target_user_stats['wins']) + '\n'
+        message_text += 'Losses: ' + str(target_user_stats['losses']) + '\n'
+        message_text += 'Winrate: ' + str(round(target_user_stats['winrate'] * 100, 1)) + '%\n'
+        message_text += '\nHistory:\n'
+        message_text += ''.join([bot_data.emotes['win'][0] if (match == 1) else bot_data.emotes['loss'][0] for match in target_user_stats['history'][-10::-1]])
+
+        await message.channel.send(message_text)
+
+@reg_command
 async def clear_matches(message, args):
     if message.channel.name == config['admin_commands_channel']:
         for channel in bot_data.matches_category.channels:
@@ -58,3 +81,10 @@ async def clear_matches(message, args):
                 await role.delete()
         bot_data.active_matches = []
         await message.channel.send('cleared matches!')
+
+commands['cm'] = commands['clear_matches']
+commands['r'] = commands['ready']
+commands['ur'] = commands['unready']
+commands['in'] = commands['inqueue']
+commands['s'] = commands['stats']
+commands['sb'] = commands['stop_bot']

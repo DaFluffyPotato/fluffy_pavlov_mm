@@ -4,7 +4,8 @@ import discord
 
 from .config import config
 from .vote import Vote
-from .util import grammatical_list, emoji_list
+from .mmr import mmr
+from .util import grammatical_list, emoji_list, calc_rank
 
 class Match:
     def __init__(self, bot_data, queue_id, teams, mmr_diff=0):
@@ -53,6 +54,17 @@ class Match:
     def process_results(self):
         self.bot_data.db.save_match(self)
 
+        teams_mmr = [[user.get_mmr(self.queue_id) for user in self.teams[0]], [user.get_mmr(self.queue_id) for user in self.teams[1]]]
+
+        rating_changes = mmr(teams_mmr, self.winner, self.scores)
+
+        print('match completed', self.match_id, teams_mmr, rating_changes)
+
+        for user in self.teams[0]:
+            user.adjust_mmr(self.queue_id, rating_changes[0])
+        for user in self.teams[1]:
+            user.adjust_mmr(self.queue_id, rating_changes[1])
+
     async def full_init(self):
         self.waiting_to_gen = False
         await self.create_roles()
@@ -60,7 +72,8 @@ class Match:
 
     @property
     def match_info_msg(self):
-        output = '**Match ' + str(self.match_id) + ' (' + self.queue_id + ')'
+        output = self.bot_data.emotes['line'][0] * 14 + '\n'
+        output += '**Match ' + str(self.match_id) + ' (' + self.queue_id + ')'
         if self.state == 7:
             if self.scores[0] > self.scores[1]:
                 output += ' - Team A wins ' + str(self.scores[0]) + '-' + str(self.scores[1]) + '!'
@@ -132,7 +145,7 @@ class Match:
                 await self.team_b_channels[0].delete()
                 new_channel = await self.bot_data.guild.create_text_channel('match-' + str(self.match_id), category=self.bot_data.matches_category)
                 for role in self.team_roles:
-                    await new_channel.set_permissions(self.team_roles[0], send_messages=True, read_messages=True)
+                    await new_channel.set_permissions(role, send_messages=True, read_messages=True, read_message_history=True)
                 self.team_a_channels[0] = new_channel
                 self.team_b_channels[0] = new_channel
                 self.owned_channels.append(new_channel)
@@ -146,7 +159,20 @@ class Match:
                 self.winner = int(self.scores[1] >= self.scores[0])
                 match_results_channel = discord.utils.get(self.bot_data.guild.channels, name=config['match_results_channel'])
                 await match_results_channel.send(self.match_info_msg)
+
                 self.process_results()
+
+                # adjust roles
+                for user in self.teams[0] + self.teams[1]:
+                    new_rank = calc_rank(user.get_mmr(self.queue_id))
+                    has_correct_rank = False
+                    for role in user.discord_user.roles:
+                        if role in list(self.bot_data.rank_roles.values()):
+                            if new_rank.lower() != role.name:
+                                await user.discord_user.remove_roles(role)
+                    if not has_correct_rank:
+                        await user.discord_user.add_roles(self.bot_data.rank_roles[new_rank])
+
                 for role in self.team_roles:
                     await role.delete()
                 for channel in self.owned_channels:
@@ -181,15 +207,15 @@ class Match:
 
         for i, channel in enumerate(team_a_channels):
             if i != 1:
-                await channel.set_permissions(self.team_roles[0], send_messages=True, read_messages=True)
+                await channel.set_permissions(self.team_roles[0], send_messages=True, read_messages=True, read_message_history=True)
             else:
-                await channel.set_permissions(self.team_roles[0], connect=True)
+                await channel.set_permissions(self.team_roles[0], connect=True, view_channel=True)
 
         for i, channel in enumerate(team_b_channels):
             if i != 1:
-                await channel.set_permissions(self.team_roles[1], send_messages=True, read_messages=True)
+                await channel.set_permissions(self.team_roles[1], send_messages=True, read_messages=True, read_message_history=True)
             else:
-                await channel.set_permissions(self.team_roles[1], connect=True)
+                await channel.set_permissions(self.team_roles[1], connect=True, view_channel=True)
 
         team_a_mentions = grammatical_list([user.discord_user.mention for user in self.teams[0]])
         team_b_mentions = grammatical_list([user.discord_user.mention for user in self.teams[1]])
