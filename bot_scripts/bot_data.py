@@ -2,8 +2,10 @@ import random
 
 import discord
 
+from .util import read_f
 from .queue import Queues
 from .config import config
+from .database import Database
 
 class BotData:
     def __init__(self):
@@ -11,6 +13,7 @@ class BotData:
         self.matches_category = None
         self.next_match_id = 0
         self.active_matches = []
+        self.db = Database(read_f('dbpass.txt').replace('\n', ''))
 
     def get_maps(self, queue_id, count=6):
         map_set = config['queues'][queue_id]['maps']

@@ -25,9 +25,12 @@ class Match:
         self.selected_map = None
 
         self.scores = [0 for team in teams]
+        self.winner = -1
 
         self.state = 0
         self.state_start = time.time()
+        self.creation_date = time.time()
+        self.end_date = -1
         self.current_vote = None
         self.completed = False
 
@@ -48,7 +51,7 @@ class Match:
         return True
 
     def process_results(self):
-        print('process results! \o/')
+        self.bot_data.db.save_match(self)
 
     async def full_init(self):
         self.waiting_to_gen = False
@@ -139,6 +142,8 @@ class Match:
         if self.state == 6:
             if time.time() - self.state_start > config['score_acceptance_duration']:
                 self.next_state()
+                self.end_date = time.time()
+                self.winner = int(self.scores[1] >= self.scores[0])
                 match_results_channel = discord.utils.get(self.bot_data.guild.channels, name=config['match_results_channel'])
                 await match_results_channel.send(self.match_info_msg)
                 self.process_results()
@@ -218,7 +223,7 @@ class Match:
 
     async def process_message(self, message):
         if message.channel in self.owned_channels:
-            if self.state == 5:
+            if self.state in [5, 6]:
                 if message.content.split(' ')[0] in ['!ss', '!submitscore']:
                     try:
                         score = int(message.content.split(' ')[1])

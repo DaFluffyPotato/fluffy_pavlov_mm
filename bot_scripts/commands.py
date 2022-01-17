@@ -33,7 +33,7 @@ async def ready(message, args):
     queue_id = bot_data.queues.find_channel_queue(message.channel.id)
     if queue_id:
         queue = bot_data.queues.queues[queue_id]
-        join_success = bot_data.queues.join_queue(User(message.author), queue_id)
+        join_success = bot_data.queues.join_queue(User(bot_data, message.author), queue_id)
         if join_success:
             await message.channel.send(message.author.display_name + ' joined the ' + queue.id + ' queue. ' + str(queue.player_count) + ' players in queue.')
         else:
@@ -44,7 +44,7 @@ async def unready(message, args):
     queue_id = bot_data.queues.find_channel_queue(message.channel.id)
     if queue_id:
         queue = bot_data.queues.queues[queue_id]
-        bot_data.queues.leave_queue(User(message.author), queue_id)
+        bot_data.queues.leave_queue(User(bot_data, message.author), queue_id)
         await message.channel.send(message.author.display_name + ' left the ' + queue.id + ' queue. ' + str(queue.player_count) + ' players in queue.')
 
 @reg_command

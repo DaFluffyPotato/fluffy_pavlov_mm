@@ -4,6 +4,8 @@ config = {
     'match_results_channel': 'match-results',
     'vote_durations': 10,
     'score_acceptance_duration': 10,
+    'base_mmr': 1000,
+    'database_uri': 'mongodb://dafluffypotato:<password>@dafluffypotato-db-shard-00-00-b1wgg.mongodb.net:27017,dafluffypotato-db-shard-00-01-b1wgg.mongodb.net:27017,dafluffypotato-db-shard-00-02-b1wgg.mongodb.net:27017/test?ssl=true&replicaSet=DaFluffyPotato-DB-shard-0&authSource=admin&retryWrites=true&w=majority',
     'queues': {
         '5v5': {
             'player_count': 10,
