@@ -10,7 +10,7 @@ config = {
     'match_category': 'matches',
     'admin_commands_channel': 'admin-commands',
     'match_results_channel': 'match-results',
-    'vote_durations': 10,
+    'vote_durations': 30,
     'score_acceptance_duration': 10,
     'base_mmr': 1500,
     'database_uri': 'mongodb://dafluffypotato:<password>@dafluffypotato-db-shard-00-00-b1wgg.mongodb.net:27017,dafluffypotato-db-shard-00-01-b1wgg.mongodb.net:27017,dafluffypotato-db-shard-00-02-b1wgg.mongodb.net:27017/test?ssl=true&replicaSet=DaFluffyPotato-DB-shard-0&authSource=admin&retryWrites=true&w=majority',
