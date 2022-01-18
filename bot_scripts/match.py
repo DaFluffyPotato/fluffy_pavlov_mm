@@ -265,14 +265,12 @@ class Match:
                                     await message.channel.send('Accepted a score of `' + str(score) + '` for team A.')
                                 else:
                                     await message.channel.send('Invalid score combination.')
-                            '''
                             if message.author in [user.discord_user for user in self.teams[1]]:
                                 valid = self.submit_score(1, score)
                                 if valid:
                                     await message.channel.send('Accepted a score of `' + str(score) + '` for team B.')
                                 else:
                                     await message.channel.send('Invalid score combination.')
-                            '''
                             if self.state == 6:
                                 await message.channel.send('The scores will be accepted in 10 seconds if no changes are made.')
                         else:
