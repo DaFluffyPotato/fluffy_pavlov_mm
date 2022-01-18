@@ -12,10 +12,14 @@ class BotData:
         self.guild = None
         self.matches_category = None
         self.emotes = {}
-        self.next_match_id = 0
         self.active_matches = []
         self.db = Database(read_f('dbpass.txt').replace('\n', ''))
         self.rank_roles = {}
+
+    def get_match_id(self):
+        self.db.db['counters'].update_one({'_id': 'match_id'}, {'$inc': {'count': 1}}, upsert=True)
+        new_id = self.db.db['counters'].find_one({'_id': 'match_id'})['count']
+        return new_id
 
     def get_match(self, match_id):
         for match in self.active_matches:

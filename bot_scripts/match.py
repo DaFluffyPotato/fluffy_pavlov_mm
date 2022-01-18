@@ -11,8 +11,7 @@ class Match:
     def __init__(self, bot_data, queue_id, teams, mmr_diff=0):
         self.queue_id = queue_id
         self.bot_data = bot_data
-        self.match_id = bot_data.next_match_id
-        bot_data.next_match_id += 1
+        self.match_id = bot_data.get_match_id()
         self.teams = teams
         self.mmr_diff = mmr_diff
         self.waiting_to_gen = True
@@ -25,7 +24,7 @@ class Match:
         self.map_set = bot_data.get_maps(queue_id)
         self.selected_map = None
 
-        self.scores = [0 for team in teams]
+        self.scores = [None for team in teams]
         self.winner = -1
 
         self.state = 0
@@ -266,12 +265,14 @@ class Match:
                                     await message.channel.send('Accepted a score of `' + str(score) + '` for team A.')
                                 else:
                                     await message.channel.send('Invalid score combination.')
+                            '''
                             if message.author in [user.discord_user for user in self.teams[1]]:
                                 valid = self.submit_score(1, score)
                                 if valid:
                                     await message.channel.send('Accepted a score of `' + str(score) + '` for team B.')
                                 else:
                                     await message.channel.send('Invalid score combination.')
+                            '''
                             if self.state == 6:
                                 await message.channel.send('The scores will be accepted in 10 seconds if no changes are made.')
                         else:
