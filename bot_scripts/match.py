@@ -34,6 +34,10 @@ class Match:
         self.current_vote = None
         self.completed = False
 
+    @property
+    def all_user_ids(self):
+        return [user.id for user in self.teams[0] + self.teams[1]]
+
     def next_state(self):
         self.state += 1
         self.state_start = time.time()

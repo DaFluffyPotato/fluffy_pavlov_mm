@@ -8,6 +8,7 @@ class User:
         self.discord_user = discord_user
         self.queue_stats = {}
         self.ban_until = 0
+        self.queue_expire = 0
 
         self.refresh()
 

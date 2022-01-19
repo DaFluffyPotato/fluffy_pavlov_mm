@@ -35,9 +35,18 @@ async def ready(message, args):
     queue_id = bot_data.queues.find_channel_queue(message.channel.id)
     if queue_id:
         queue = bot_data.queues.queues[queue_id]
-        join_success = bot_data.queues.join_queue(User(bot_data, message.author), queue_id)
+
+        ready_dur = 30
+        if len(args) > 1:
+            try:
+                ready_dur = int(args[1])
+                ready_dur = max(1, min(120, ready_dur))
+            except ValueError:
+                pass
+
+        join_success = bot_data.queues.join_queue(User(bot_data, message.author), queue_id, ready_dur)
         if join_success:
-            await message.channel.send(message.author.display_name + ' joined the ' + queue.id + ' queue. ' + str(queue.player_count) + ' players in queue.')
+            await message.channel.send(message.author.display_name + ' joined the ' + queue.id + ' queue (' + str(ready_dur) + ' mins). ' + str(queue.player_count) + ' players in queue.')
         else:
             await message.channel.send('Failed to join queue. Please finish any existing games and leave all other queues.')
 
@@ -87,6 +96,13 @@ async def clear_matches(message, args):
         await message.channel.send('cleared matches!')
 
 @reg_command
+async def clear_queue(message, args):
+    if message.channel.name == config['admin_commands_channel']:
+        queue_id = args[1]
+        bot_data.queues.queues[queue_id].clear()
+        await message.channel.send('cleared `' + queue_id + '` queue!')
+
+@reg_command
 async def nullify(message, args):
     if message.channel.name == config['admin_commands_channel']:
         match_id = int(args[1])
@@ -94,6 +110,7 @@ async def nullify(message, args):
         await match.clear()
         await message.channel.send('nullified match `' + str(match_id) + '`.')
 
+#aliases
 commands['cm'] = commands['clear_matches']
 commands['r'] = commands['ready']
 commands['ur'] = commands['unready']

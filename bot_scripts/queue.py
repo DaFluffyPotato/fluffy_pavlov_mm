@@ -1,3 +1,5 @@
+import time
+
 from .match import Match
 from .util import grammatical_list
 from .team_generation import generate_teams
@@ -28,9 +30,12 @@ class Queues:
     def new_queue(self, queue_id, channel_id, player_count):
         self.queues[queue_id] = Queue(self.bot_data, queue_id, channel_id, player_count)
 
-    def join_queue(self, user, queue_id):
-        if (user.id not in self.all_user_ids) or (self.debug_mode):
-            self.queues[queue_id].add_user(user)
+    def join_queue(self, user, queue_id, duration):
+        if (user.id in self.bot_data.get_users_in_matches()) and (not self.debug_mode):
+            return False
+
+        if (user.id not in self.all_user_ids) or (user.id in self.queues[queue_id].user_ids) or (self.debug_mode):
+            self.queues[queue_id].add_user(user, duration)
             return True
         return False
 
@@ -39,6 +44,10 @@ class Queues:
             self.queues[queue_id].remove_user(user)
             return True
         return False
+
+    async def tick(self):
+        for queue in self.queues.values():
+            await queue.tick()
 
 class Queue:
     def __init__(self, bot_data, custom_id, channel_id, match_player_count):
@@ -52,6 +61,13 @@ class Queue:
     @property
     def player_count(self):
         return len(self.users)
+
+    @property
+    def user_ids(self):
+        return [user.id for user in self.users]
+
+    def clear(self):
+        self.users = []
 
     def create_match(self):
         # lock queue
@@ -67,8 +83,12 @@ class Queue:
         # unlock queue
         self.creating_match = False
 
-    def add_user(self, user):
+    def add_user(self, user, duration):
+        if user.id in self.user_ids:
+            self.remove_user(user)
+
         self.users.append(user)
+        user.queue_expire = time.time() + duration * 60
         if len(self.users) >= self.match_player_count:
             if not self.creating_match:
                 self.create_match()
@@ -79,6 +99,12 @@ class Queue:
                 self.users.remove(user_in_queue)
                 return True
         return False
+
+    async def tick(self):
+        for user in self.users:
+            if user.queue_expire < time.time():
+                self.remove_user(user)
+                await user.discord_user.send('Your queue time has expired and you have been removed from the ' + self.id + ' queue.')
 
     @property
     def user_list_str(self):

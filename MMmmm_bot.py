@@ -14,13 +14,15 @@ client = discord.Client(intents=intents)
 
 guild_id = 'Fluffy\'s Pavlov Matchmaking'
 
+tick_count = 0
+
 @client.event
 async def on_ready():
     for guild in client.guilds:
         if guild.name == guild_id:
             print('found matching guild!')
             bot_data.load(guild)
-            bot_data.queues.debug_mode = True
+            #bot_data.queues.debug_mode = True
 
     print('Connected to Discord!')
 
@@ -44,6 +46,23 @@ async def on_reaction_add(reaction, user):
 
 @tasks.loop(seconds=1)
 async def regular_tasks():
+    global tick_count
+    tick_count += 1
+
+    if tick_count % 10 == 0:
+        biggest_queue = [None, 0]
+        for queue in bot_data.queues.queues.values():
+            if len(queue.users) > biggest_queue[1]:
+                biggest_queue = [queue.id, len(queue.users)]
+
+        if biggest_queue[0] == None:
+            activity = discord.Game(name='nobody in queue')
+        else:
+            activity = discord.Game(name=str(biggest_queue[1]) + ' player in ' + biggest_queue[0])
+        await client.change_presence(activity=activity)
+
+    if bot_data.queues:
+        await bot_data.queues.tick()
     for match in bot_data.active_matches[::-1]:
         if match.waiting_to_gen:
             await match.full_init()

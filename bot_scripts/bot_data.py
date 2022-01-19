@@ -15,6 +15,13 @@ class BotData:
         self.active_matches = []
         self.db = Database(read_f('dbpass.txt').replace('\n', ''))
         self.rank_roles = {}
+        self.queues = None
+
+    def get_users_in_matches(self):
+        user_ids = []
+        for match in self.active_matches:
+            user_ids += match.all_user_ids
+        return user_ids
 
     def get_match_id(self):
         self.db.db['counters'].update_one({'_id': 'match_id'}, {'$inc': {'count': 1}}, upsert=True)
