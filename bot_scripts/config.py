@@ -21,7 +21,7 @@ config = {
             'maps': ['Sand', 'Museum', 'Stockpile', 'Oilrig', 'Cache', 'Mirage', 'Dust 2', 'Seaside', 'Stahlbrecher', 'Reachsky', 'Overpass', 'Manor'],
         },
         '2v2': {
-            'player_count': 2,
+            'player_count': 4,
             'channel': '2v2-queue',
             'maps': ['Sand', 'Mirage', 'Museum', 'Reachsky', 'Cache', 'Stockpile', 'Business'],
         },
