@@ -9,6 +9,7 @@ from .database import Database
 
 class BotData:
     def __init__(self):
+        self.client = None
         self.guild = None
         self.matches_category = None
         self.emotes = {}
@@ -38,7 +39,8 @@ class BotData:
         random.shuffle(map_set)
         return map_set[:count]
 
-    def load(self, guild):
+    def load(self, client, guild):
+        self.client = client
         self.guild = guild
 
         self.queues = Queues(self)

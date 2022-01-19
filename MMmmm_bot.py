@@ -21,8 +21,8 @@ async def on_ready():
     for guild in client.guilds:
         if guild.name == guild_id:
             print('found matching guild!')
-            bot_data.load(guild)
-            #bot_data.queues.debug_mode = True
+            bot_data.load(client, guild)
+            bot_data.queues.debug_mode = True
 
     print('Connected to Discord!')
 

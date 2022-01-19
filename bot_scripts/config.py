@@ -23,7 +23,7 @@ config = {
         '2v2': {
             'player_count': 4,
             'channel': '2v2-queue',
-            'maps': ['Sand', 'Mirage', 'Museum', 'Reachsky', 'Cache', 'Stockpile', 'Business'],
+            'maps': ['Sand', 'Museum', 'Reachsky', 'Stockpile', 'Business', 'Chess 2', 'Gravity'],
         },
     }
 }

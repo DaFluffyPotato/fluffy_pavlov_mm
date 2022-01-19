@@ -5,6 +5,7 @@ import discord
 from .config import config
 from .vote import Vote
 from .mmr import mmr
+from .user import User
 from .util import grammatical_list, emoji_list, calc_rank
 
 class Match:
@@ -258,6 +259,13 @@ class Match:
 
     async def process_message(self, message):
         if message.channel in self.owned_channels:
+            if message.content.split(' ')[0] == '!abandon':
+                abandoning_user = User(self.bot_data, message.author)
+                abandoning_user.ban(30)
+                queue_channel = self.bot_data.client.get_channel(self.bot_data.queues.queues[self.queue_id].channel_id)
+                await queue_channel.send(abandoning_user.name + ' has abandoned match ' + str(self.match_id) + ' and a penalty has been applied.')
+                await self.clear()
+
             if self.state in [5, 6]:
                 if message.content.split(' ')[0] in ['!ss', '!submitscore']:
                     try:

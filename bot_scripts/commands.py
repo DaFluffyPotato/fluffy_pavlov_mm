@@ -1,3 +1,4 @@
+import time
 import sys
 
 import discord
@@ -44,7 +45,12 @@ async def ready(message, args):
             except ValueError:
                 pass
 
-        join_success = bot_data.queues.join_queue(User(bot_data, message.author), queue_id, ready_dur)
+        target_user = User(bot_data, message.author)
+        if target_user.banned:
+            await message.channel.send('Failed to join queue. Your account has been banned from readying up for the next ' + str(int((target_user.ban_until - time.time()) / 60) + 1) + ' minutes.')
+            return None
+
+        join_success = bot_data.queues.join_queue(target_user, queue_id, ready_dur)
         if join_success:
             await message.channel.send(message.author.display_name + ' joined the ' + queue.id + ' queue (' + str(ready_dur) + ' mins). ' + str(queue.player_count) + ' players in queue.')
         else:
@@ -109,6 +115,23 @@ async def nullify(message, args):
         match = bot_data.get_match(match_id)
         await match.clear()
         await message.channel.send('nullified match `' + str(match_id) + '`.')
+
+@reg_command
+async def temp_ban(message, args):
+    if message.channel.name == config['admin_commands_channel']:
+        ban_duration = int(args[1])
+        if len(message.mentions):
+            target_user = User(bot_data, message.mentions[0])
+            target_user.ban(ban_duration)
+            await message.channel.send('temp banned ' + target_user.name + ' for ' + str(ban_duration) + ' minutes.')
+
+@reg_command
+async def unban(message, args):
+    if message.channel.name == config['admin_commands_channel']:
+        if len(message.mentions):
+            target_user = User(bot_data, message.mentions[0])
+            target_user.ban(-1)
+            await message.channel.send('unbanned ' + target_user.name + '.')
 
 #aliases
 commands['cm'] = commands['clear_matches']
