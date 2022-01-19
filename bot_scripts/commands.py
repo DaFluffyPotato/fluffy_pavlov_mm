@@ -4,6 +4,7 @@ import sys
 import discord
 
 from .user import User
+from .duo_invite import DuoInvite
 from .bot_data import bot_data
 from .config import config
 from .util import calc_rank
@@ -90,6 +91,37 @@ async def stats(message, args):
         await message.channel.send(message_text)
 
 @reg_command
+async def duoinvite(message, args):
+    queue_id = bot_data.queues.find_channel_queue(message.channel.id)
+    if queue_id:
+        if len(message.mentions):
+            invite_initiator = User(bot_data, message.author)
+            invite_target = User(bot_data, message.mentions[0])
+
+            if (invite_initiator.get_mmr(queue_id) > config['duo_limit']) or (invite_target.get_mmr(queue_id) > config['duo_limit']):
+                await message.channel.send('Both players must be below the duo mmr limit of ' + str(config['duo_limit']) + ' to duo.')
+                return None
+
+            new_invite = DuoInvite(bot_data, queue_id, message, invite_initiator, invite_target)
+            await new_invite.generate()
+            bot_data.duo_invites.append(new_invite)
+        else:
+            await message.channel.send('Please mention the user you would like to invite.')
+
+@reg_command
+async def duoleave(message, args):
+    queue_id = bot_data.queues.find_channel_queue(message.channel.id)
+    if queue_id:
+        queue = bot_data.queues.queues[queue_id]
+        print(queue.duos)
+        for duo in queue.duos[::-1]:
+            if message.author.id in duo:
+                queue.duos.remove(duo)
+        print(queue.duos)
+
+        await message.channel.send(message.author.name + ' left all duos in this queue.')
+
+@reg_command
 async def clear_matches(message, args):
     if message.channel.name == config['admin_commands_channel']:
         for channel in bot_data.matches_category.channels:
@@ -114,6 +146,7 @@ async def nullify(message, args):
         match_id = int(args[1])
         match = bot_data.get_match(match_id)
         await match.clear()
+        match.completed = True
         await message.channel.send('nullified match `' + str(match_id) + '`.')
 
 @reg_command

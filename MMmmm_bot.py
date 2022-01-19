@@ -43,6 +43,8 @@ async def on_reaction_add(reaction, user):
     if reaction.message.channel.category == bot_data.matches_category:
         for match in bot_data.active_matches:
             await match.process_reaction(reaction, user)
+    for duo_invite in bot_data.duo_invites:
+        await duo_invite.process_reaction(reaction, user)
 
 @tasks.loop(seconds=1)
 async def regular_tasks():
@@ -60,6 +62,11 @@ async def regular_tasks():
         else:
             activity = discord.Game(name=str(biggest_queue[1]) + ' player in ' + biggest_queue[0])
         await client.change_presence(activity=activity)
+
+    for duo_invite in bot_data.duo_invites[::-1]:
+        await duo_invite.tick()
+        if duo_invite.resolved:
+            bot_data.duo_invites.remove(duo_invite)
 
     if bot_data.queues:
         await bot_data.queues.tick()

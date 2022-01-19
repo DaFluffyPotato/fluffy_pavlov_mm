@@ -17,6 +17,7 @@ class BotData:
         self.db = Database(read_f('dbpass.txt').replace('\n', ''))
         self.rank_roles = {}
         self.queues = None
+        self.duo_invites = []
 
     def get_users_in_matches(self):
         user_ids = []

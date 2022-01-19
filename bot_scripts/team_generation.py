@@ -1,8 +1,12 @@
+import random
+
 from itertools import permutations
 
 def generate_teams(users, queue_id):
     best_teams = [None, 99999999]
-    for permutation in permutations(users):
+    team_arrangements = list(permutations(users))
+    random.shuffle(team_arrangements)
+    for permutation in team_arrangements:
         team_1 = permutation[:len(permutation) // 2]
         team_2 = permutation[len(permutation) // 2:]
         team_1_mmr = sum([user.get_mmr(queue_id) for user in team_1])

@@ -57,6 +57,7 @@ class Queue:
         self.match_player_count = match_player_count
         self.users = []
         self.creating_match = False
+        self.duos = []
 
     @property
     def player_count(self):
