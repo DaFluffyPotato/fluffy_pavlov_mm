@@ -19,6 +19,7 @@ class Match:
         self.team_roles = []
         self.team_sides = [None for team in teams]
         self.owned_channels = []
+        self.unreadied_users = self.teams[0] + self.teams[1]
 
         self.team_ready_counts = [0 for team in teams]
 
@@ -46,7 +47,7 @@ class Match:
     def submit_score(self, team, score):
         if self.scores == [None, None]:
             self.scores[team] = score
-        elif ((score == 10) or (self.scores[abs(team - 1)] == 10)): # and (self.scores[abs(team - 1)] + score <= 20):
+        elif ((score == 10) or (self.scores[abs(team - 1)] == 10)) and (self.scores[abs(team - 1)] + score <= 20):
             self.scores[team] = score
             if None not in self.scores:
                 self.state = 6
@@ -95,6 +96,16 @@ class Match:
 
         if self.current_vote:
             self.current_vote.tick()
+
+        if self.state == 0:
+            if time.time() - self.state_start > 10:
+                queue_channel = self.bot_data.client.get_channel(self.bot_data.queues.queues[self.queue_id].channel_id)
+                for abandoning_user in self.unreadied_users:
+                    abandoning_user.ban(30)
+                    await queue_channel.send(abandoning_user.name + ' failed to accept match ' + str(self.match_id) + ' in time and a penalty has been applied.')
+                await self.clear()
+                self.state = -1
+                self.completed = True
 
         if self.state == 1:
             self.next_state()
@@ -242,19 +253,20 @@ class Match:
 
     async def process_reaction(self, reaction, user):
         if reaction.message.channel in self.owned_channels:
-            ready_reaction = False
-            if self.team_a_init_msg == reaction.message:
-                self.team_ready_counts[0] += 1
-                ready_reaction = True
-            if self.team_b_init_msg == reaction.message:
-                self.team_ready_counts[1] += 1
-                ready_reaction = True
+            if self.state == 0:
+                ready_reaction = False
+                if self.team_a_init_msg == reaction.message:
+                    self.team_ready_counts[0] += 1
+                    ready_reaction = True
+                if self.team_b_init_msg == reaction.message:
+                    self.team_ready_counts[1] += 1
+                    ready_reaction = True
 
-            if ready_reaction:
-                if sum(self.team_ready_counts) >= len(self.teams[0] * len(self.teams)) + len(self.teams):
-                    await self.team_a_channels[0].send('Both teams have accepted the match. Map voting will now begin.')
-                    await self.team_b_channels[0].send('Both teams have accepted the match. Map voting will now begin.')
-                    self.next_state()
+                if ready_reaction:
+                    if sum(self.team_ready_counts) >= len(self.teams[0] * len(self.teams)) + len(self.teams):
+                        await self.team_a_channels[0].send('Both teams have accepted the match. Map voting will now begin.')
+                        await self.team_b_channels[0].send('Both teams have accepted the match. Map voting will now begin.')
+                        self.next_state()
 
             if self.current_vote:
                 self.current_vote.process_reaction(reaction, user)
@@ -267,6 +279,8 @@ class Match:
                 queue_channel = self.bot_data.client.get_channel(self.bot_data.queues.queues[self.queue_id].channel_id)
                 await queue_channel.send(abandoning_user.name + ' has abandoned match ' + str(self.match_id) + ' and a penalty has been applied.')
                 await self.clear()
+                self.completed = True
+                self.state = -1
 
             if self.state in [5, 6]:
                 if message.content.split(' ')[0] in ['!ss', '!submitscore']:
