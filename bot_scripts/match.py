@@ -98,7 +98,7 @@ class Match:
             self.current_vote.tick()
 
         if self.state == 0:
-            if time.time() - self.state_start > 10:
+            if time.time() - self.state_start > 60 * 5:
                 queue_channel = self.bot_data.client.get_channel(self.bot_data.queues.queues[self.queue_id].channel_id)
                 for abandoning_user in self.unreadied_users:
                     abandoning_user.ban(30)
