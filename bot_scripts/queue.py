@@ -75,7 +75,7 @@ class Queue:
         self.creating_match = True
 
         while len(self.users) >= self.match_player_count:
-            teams, mmr_diff = generate_teams(self.users[:10], self.id)
+            teams, mmr_diff = generate_teams(self.users[:10], self.id, self.duos)
             for team in teams:
                 for user in team:
                     self.users.remove(user)

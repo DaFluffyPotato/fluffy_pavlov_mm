@@ -51,9 +51,17 @@ async def ready(message, args):
             await message.channel.send('Failed to join queue. Your account has been banned from readying up for the next ' + str(int((target_user.ban_until - time.time()) / 60) + 1) + ' minutes.')
             return None
 
+        duo_msg = ''
+        for duo in queue.duos:
+            if message.author.id in duo:
+                matching_partners = await message.guild.query_members(user_ids=duo[abs(duo.index(message.author.id) - 1)])
+                if len(matching_partners):
+                    duo_partner = matching_partners[0].name
+                    duo_msg = ' Attempting duo with ' + duo_partner + '.'
+
         join_success = bot_data.queues.join_queue(target_user, queue_id, ready_dur)
         if join_success:
-            await message.channel.send(message.author.display_name + ' joined the ' + queue.id + ' queue (' + str(ready_dur) + ' mins). ' + str(queue.player_count) + ' players in queue.')
+            await message.channel.send(message.author.display_name + ' joined the ' + queue.id + ' queue (' + str(ready_dur) + ' mins). ' + str(queue.player_count) + ' players in queue.' + duo_msg)
         else:
             await message.channel.send('Failed to join queue. Please finish any existing games and leave all other queues.')
 
