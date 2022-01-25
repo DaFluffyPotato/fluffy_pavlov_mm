@@ -48,3 +48,6 @@ class User:
 
     def get_stats(self, queue_id):
         return self.bot_data.db.get_user_history(self, queue_id)
+
+    def get_nearby_users(self, queue_id):
+        return self.bot_data.db.get_nearby_users(self, queue_id)

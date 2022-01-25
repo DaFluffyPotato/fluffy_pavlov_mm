@@ -6,6 +6,13 @@ def generate_teams(users, queue_id, duos):
     best_teams = [None, 99999999]
     team_arrangements = list(permutations(users))
     random.shuffle(team_arrangements)
+
+    # clear out invalid duos due to a player not being in queue
+    all_users = [user.id for user in users]
+    for duo in duos[::-1]:
+        if len(set(all_users) - set(duo)) != len(set(all_users) - 2):
+            duos.remove(duo)
+
     for permutation in team_arrangements:
         team_1 = permutation[:len(permutation) // 2]
         team_2 = permutation[len(permutation) // 2:]

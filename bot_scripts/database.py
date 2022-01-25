@@ -8,6 +8,9 @@ class Database:
         self.db_client = pymongo.MongoClient(connect_uri, connectTimeoutMS=30000, socketTimeoutMS=None, socketKeepAlive=True, connect=False, maxPoolsize=1)
         self.db = self.db_client['fluffy_pavlov_mm']
 
+    def get_ping_rules(self):
+        return list(self.db['ping_rules'].find({}))
+
     def save_match(self, match):
         match_data = {
             'match_id': match.match_id,
@@ -84,3 +87,18 @@ class Database:
         }
 
         return stats
+
+    def get_nearby_users(self, user, queue_id):
+        users_above = 5
+        users_total = 10
+
+        user_rank = self.db['users'].find({'queue_stats.' + queue_id + '.mmr': {'$gte': user.get_mmr(queue_id)}}).count()
+
+        base_skip = max(user_rank - users_above, 0)
+
+        nearby_users = list(self.db['users'].find({}).sort('queue_stats.' + queue_id + '.mmr', -1).skip(base_skip).limit(users_total))
+
+        for i, user in enumerate(nearby_users):
+            user['rank'] = base_skip + i + 1
+
+        return nearby_users

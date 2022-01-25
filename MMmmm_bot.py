@@ -30,13 +30,14 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    if message.content[0] == '!':
-        base_cmd = message.content.split(' ')[0][1:]
-        if base_cmd in commands:
-            await commands[base_cmd](message, message.content.split(' '))
+    if len(message.content):
+        if message.content[0] == '!':
+            base_cmd = message.content.split(' ')[0][1:].lower()
+            if base_cmd in commands:
+                await commands[base_cmd](message, message.content.split(' '))
 
-        for match in bot_data.active_matches:
-            await match.process_message(message)
+            for match in bot_data.active_matches:
+                await match.process_message(message)
 
 @client.event
 async def on_reaction_add(reaction, user):

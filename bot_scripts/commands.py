@@ -8,6 +8,7 @@ from .duo_invite import DuoInvite
 from .bot_data import bot_data
 from .config import config
 from .util import calc_rank
+from .pings import ready_pings
 
 commands = {}
 
@@ -61,6 +62,7 @@ async def ready(message, args):
 
         join_success = bot_data.queues.join_queue(target_user, queue_id, ready_dur)
         if join_success:
+            await ready_pings(bot_data.queues.queues[queue_id])
             await message.channel.send(message.author.display_name + ' joined the ' + queue.id + ' queue (' + str(ready_dur) + ' mins). ' + str(queue.player_count) + ' players in queue.' + duo_msg)
         else:
             await message.channel.send('Failed to join queue. Please finish any existing games and leave all other queues.')
@@ -97,6 +99,39 @@ async def stats(message, args):
         message_text += ''.join([bot_data.emotes['win'][0] if (match == 1) else bot_data.emotes['loss'][0] for match in target_user_stats['history'][-10:][::-1]])
 
         await message.channel.send(message_text)
+
+@reg_command
+async def aroundme(message, args):
+    queue_id = bot_data.queues.find_channel_queue(message.channel.id)
+
+    user = User(bot_data, message.author)
+    nearby_users = user.get_nearby_users(queue_id)
+
+    message_text = '```'
+    for user in nearby_users:
+        message_text += '#' + str(user['rank'])  + ': ' + user['name'] + ' - ' + str(round(user['queue_stats'][queue_id]['mmr'] if queue_id in user['queue_stats'] else 0.0, 1)) + '\n'
+    if message_text[-1] == '\n':
+        message_text = message_text[:-1]
+    message_text += '```'
+
+    await message.channel.send(message_text)
+
+@reg_command
+async def pingme(message, args):
+    queue_id = bot_data.queues.find_channel_queue(message.channel.id)
+
+    try:
+        threshold = int(args[1])
+    except:
+        await message.channel.send('Please specify a player count threshold. Set 0 to disable.')
+        return
+
+    bot_data.db.db['ping_rules'].update_one({'_id': message.author.id}, {'$set': {'player_threshold.' + queue_id: threshold}}, upsert=True)
+    bot_data.refresh_ping_rules()
+    if threshold == 0:
+        await message.channel.send('Removed your ping threshold for the `' + queue_id + '` queue.')
+    else:
+        await message.channel.send('Set your ping threshold for the `' + queue_id + '` queue to `' + str(threshold) + '`.')
 
 @reg_command
 async def duoinvite(message, args):
@@ -181,3 +216,4 @@ commands['ur'] = commands['unready']
 commands['in'] = commands['inqueue']
 commands['s'] = commands['stats']
 commands['sb'] = commands['stop_bot']
+commands['am'] = commands['aroundme']

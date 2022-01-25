@@ -14,6 +14,7 @@ config = {
     'score_acceptance_duration': 10,
     'base_mmr': 1500,
     'duo_limit': 1600,
+    'ping_cooldown': 60,
     'database_uri': 'mongodb://dafluffypotato:<password>@dafluffypotato-db-shard-00-00-b1wgg.mongodb.net:27017,dafluffypotato-db-shard-00-01-b1wgg.mongodb.net:27017,dafluffypotato-db-shard-00-02-b1wgg.mongodb.net:27017/test?ssl=true&replicaSet=DaFluffyPotato-DB-shard-0&authSource=admin&retryWrites=true&w=majority',
     'queues': {
         '5v5': {

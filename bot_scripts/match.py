@@ -231,14 +231,14 @@ class Match:
                 await channel.set_permissions(self.team_roles[0], send_messages=True, read_messages=True, read_message_history=True)
             else:
                 await channel.set_permissions(self.team_roles[0], connect=True, view_channel=True)
-                await channel.set_permissions(self.bot_data.guild.default_role, view_channel=True)
+                await channel.set_permissions(self.bot_data.guild.default_role, view_channel=True, connect=False)
 
         for i, channel in enumerate(team_b_channels):
             if i != 1:
                 await channel.set_permissions(self.team_roles[1], send_messages=True, read_messages=True, read_message_history=True)
             else:
                 await channel.set_permissions(self.team_roles[1], connect=True, view_channel=True)
-                await channel.set_permissions(self.bot_data.guild.default_role, view_channel=True)
+                await channel.set_permissions(self.bot_data.guild.default_role, view_channel=True, connect=False)
 
         team_a_mentions = grammatical_list([user.discord_user.mention for user in self.teams[0]])
         team_b_mentions = grammatical_list([user.discord_user.mention for user in self.teams[1]])
