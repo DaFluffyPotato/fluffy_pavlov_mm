@@ -10,7 +10,7 @@ def generate_teams(users, queue_id, duos):
     # clear out invalid duos due to a player not being in queue
     all_users = [user.id for user in users]
     for duo in duos[::-1]:
-        if len(set(all_users) - set(duo)) != len(set(all_users) - 2):
+        if len(set(all_users) - set(duo)) != len(set(all_users)) - 2:
             duos.remove(duo)
 
     for permutation in team_arrangements:

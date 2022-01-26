@@ -85,8 +85,9 @@ class Queue:
         self.creating_match = False
 
     def add_user(self, user, duration):
-        if user.id in self.user_ids:
-            self.remove_user(user)
+        if not self.bot_data.queues.debug_mode:
+            if user.id in self.user_ids:
+                self.remove_user(user)
 
         self.users.append(user)
         user.queue_expire = time.time() + duration * 60
