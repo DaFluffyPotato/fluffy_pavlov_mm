@@ -47,7 +47,7 @@ class Match:
     def submit_score(self, team, score):
         if self.scores == [None, None]:
             self.scores[team] = score
-        elif ((score == 10) or (self.scores[abs(team - 1)] == 10)) and (self.scores[abs(team - 1)] + score <= 20):
+        elif ((score == 10) or (self.scores[abs(team - 1)] in [10, None])) and (self.scores[abs(team - 1)] + score <= 20):
             self.scores[team] = score
             if None not in self.scores:
                 self.state = 6
